@@ -280,12 +280,8 @@ export default function GameSfxGenerator() {
     <section className="generator-card" aria-labelledby="generator-title">
       <div className="panel-head panel-head--stack">
         <div>
-          <h2 id="generator-title">程序化音效工作台</h2>
-          <p className="panel-subtitle">
-            灵感来自 sfxr 与 jsfxr，现在被拆分为一个只专注于游戏音效生成的独立仓库。
-          </p>
+          <h2 id="generator-title">音效工作台</h2>
         </div>
-        <span>浏览器实时合成，无需上传素材。</span>
       </div>
 
       <div className="status-banner status-banner--global">{status}</div>
