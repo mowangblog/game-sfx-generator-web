@@ -26,11 +26,11 @@ const DEFAULT_EXPANDED_SECTIONS = {
   filter: false,
 } as const;
 
-const WAVEFORM_OPTIONS: Array<{ value: SfxWaveform; label: string; detail: string }> = [
-  { value: 'square', label: '方波', detail: '街机感最强，适合金币、UI、跳跃。' },
-  { value: 'sawtooth', label: '锯齿波', detail: '更明亮尖锐，适合激光、切割、推进。' },
-  { value: 'sine', label: '正弦波', detail: '更圆润干净，适合提示音、合成器色彩。' },
-  { value: 'noise', label: '噪声', detail: '颗粒更粗，适合爆炸、命中、环境碎裂。' },
+const WAVEFORM_OPTIONS: Array<{ value: SfxWaveform; label: string; detail: string; glyph: string }> = [
+  { value: 'square', label: '方波', detail: '街机感最强，适合金币、UI、跳跃。', glyph: '[]' },
+  { value: 'sawtooth', label: '锯齿波', detail: '更明亮尖锐，适合激光、切割、推进。', glyph: '/|' },
+  { value: 'sine', label: '正弦波', detail: '更圆润干净，适合提示音、合成器色彩。', glyph: '~' },
+  { value: 'noise', label: '噪声', detail: '颗粒更粗，适合爆炸、命中、环境碎裂。', glyph: '::' },
 ];
 
 const WAVEFORM_LABELS: Record<SfxWaveform, string> = {
@@ -55,6 +55,36 @@ const PRESET_LABELS: Record<SfxPresetId, string> = {
   mutate: '变异',
 };
 
+const PRESET_DETAILS: Record<SfxPresetId, string> = {
+  random: '探索灵感',
+  pickupCoin: '奖励反馈',
+  laserShoot: '射击脉冲',
+  explosion: '爆裂冲击',
+  powerup: '升级提示',
+  hitHurt: '受击反馈',
+  jump: '动作起跳',
+  click: '轻量点击',
+  blipSelect: '菜单选择',
+  synth: '电子音色',
+  tone: '单音基底',
+  mutate: '快速变体',
+};
+
+const PRESET_GLYPHS: Record<SfxPresetId, string> = {
+  random: 'RND',
+  pickupCoin: 'COIN',
+  laserShoot: 'LAS',
+  explosion: 'EXP',
+  powerup: 'UP',
+  hitHurt: 'HIT',
+  jump: 'JMP',
+  click: 'CLK',
+  blipSelect: 'SEL',
+  synth: 'SYN',
+  tone: 'TON',
+  mutate: 'ALT',
+};
+
 type SliderConfig = {
   key: keyof SfxParams;
   label: string;
@@ -77,8 +107,8 @@ type ControlSection = {
 const CONTROL_SECTIONS: ControlSection[] = [
   {
     id: 'envelope',
-    title: '包络',
-    description: '控制起音、保持、冲击和衰减，先把节奏感调舒服。',
+    title: '声音轮廓',
+    description: '控制起音、保持、冲击和衰减，先把声音的节奏和收尾调舒服。',
     fields: [
       { key: 'attack', label: '起音', hint: '数值越高，声音开头越柔和。', min: 0, max: 1 },
       { key: 'sustain', label: '保持', hint: '决定声音主体持续多久。', min: 0, max: 1 },
@@ -259,6 +289,7 @@ export default function GameSfxGenerator() {
   const [params, setParams] = useState<SfxParams>(DEFAULT_SFX_PARAMS);
   const [sampleRate, setSampleRate] = useState<SfxSampleRate>(44100);
   const [bitDepth, setBitDepth] = useState<SfxBitDepth>(16);
+  const [activePreset, setActivePreset] = useState<SfxPresetId | null>(null);
   const [serialized, setSerialized] = useState(() => serializeSfxParams(DEFAULT_SFX_PARAMS));
   const [status, setStatus] = useState('已加载默认音色。试试一个预设，或者先从包络和频率开始塑形。');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -310,6 +341,7 @@ export default function GameSfxGenerator() {
 
   const handlePreset = (preset: SfxPresetId): void => {
     commitParams((current) => createSfxPreset(preset, current));
+    setActivePreset(preset);
     setStatus(`已生成「${PRESET_LABELS[preset]}」风格音效。`);
   };
 
@@ -354,16 +386,6 @@ export default function GameSfxGenerator() {
     }
   };
 
-  const handleStop = (): void => {
-    try {
-      sourceRef.current?.stop();
-    } catch {}
-
-    sourceRef.current = null;
-    setIsPlaying(false);
-    setStatus('已停止播放。');
-  };
-
   const handleCopyJson = async (): Promise<void> => {
     try {
       if (!navigator.clipboard) {
@@ -391,25 +413,9 @@ export default function GameSfxGenerator() {
   };
 
   return (
-    <section className="workbench-card" aria-labelledby="generator-title">
+    <section className="workbench-card" aria-label="音效工作台">
       <div className="workbench-layout">
         <div className="editor-column">
-          <header className="console-surface workbench-intro">
-            <p className="section-kicker">Workbench</p>
-            <div className="workbench-intro__row">
-              <div>
-                <h2 id="generator-title">音效工作台</h2>
-                <p className="workbench-intro__subtitle">
-                  左侧负责塑形，右侧负责试听与导出。先选模板，再围绕包络和频率把声音调到位。
-                </p>
-              </div>
-              <div className="console-readout">
-                <span>Current Voice</span>
-                <strong>{WAVEFORM_LABELS[params.waveform]}</strong>
-              </div>
-            </div>
-          </header>
-
           <section className="console-surface preset-rack" aria-labelledby="preset-strip-title">
             <div className="panel-head">
               <div>
@@ -423,11 +429,16 @@ export default function GameSfxGenerator() {
               {SFX_PRESET_ORDER.map((preset) => (
                 <button
                   key={preset}
-                  className={`preset-button ${preset === 'mutate' ? 'preset-button--accent' : ''}`}
+                  className={`preset-button ${preset === 'mutate' ? 'preset-button--mutate' : ''} ${activePreset === preset ? 'is-active' : ''}`}
                   type="button"
+                  aria-pressed={activePreset === preset}
                   onClick={() => handlePreset(preset)}
                 >
-                  {PRESET_LABELS[preset]}
+                  <span className="preset-button__glyph" aria-hidden="true">{PRESET_GLYPHS[preset]}</span>
+                  <span className="preset-button__copy">
+                    <span className="preset-button__label">{PRESET_LABELS[preset]}</span>
+                    <small>{PRESET_DETAILS[preset]}</small>
+                  </span>
                 </button>
               ))}
             </div>
@@ -439,7 +450,7 @@ export default function GameSfxGenerator() {
                 <p className="section-kicker">Waveform</p>
                 <h3 id="waveform-panel-title">基础波形</h3>
               </div>
-              <span>先定底色，再决定包络和滤波该往哪一边拉。</span>
+              <span>先定音色底子，再决定声音轮廓和滤波该往哪一边拉。</span>
             </div>
 
             <div className="waveform-grid">
@@ -454,8 +465,11 @@ export default function GameSfxGenerator() {
                     name="sfx-waveform"
                     onChange={() => updateParam('waveform', option.value)}
                   />
-                  <span className="mode-pill__label">{option.label}</span>
-                  <small>{option.detail}</small>
+                  <div className="mode-pill__badge" aria-hidden="true">{option.glyph}</div>
+                  <div className="mode-pill__copy">
+                    <span className="mode-pill__label">{option.label}</span>
+                    <small>{option.detail}</small>
+                  </div>
                 </label>
               ))}
             </div>
@@ -514,7 +528,7 @@ export default function GameSfxGenerator() {
             <div className="panel-head preview-dock__head">
               <div>
                 <p className="section-kicker">Live Monitor</p>
-                <h3 id="preview-title">预览台</h3>
+                <h3 id="preview-title">预览</h3>
               </div>
               <span className="preview-dock__meta">
                 {WAVEFORM_LABELS[params.waveform]} · {sampleRate / 1000}kHz · {bitDepth} bit
@@ -579,11 +593,17 @@ export default function GameSfxGenerator() {
             </div>
 
             <div className="monitor-actions">
-              <button className="primary-button" type="button" onClick={() => { void handlePlay(); }}>
-                {isPlaying ? '重新播放' : '播放'}
-              </button>
-              <button className="ghost-button" type="button" onClick={handleStop}>
-                停止
+              <button
+                className="primary-button play-button"
+                type="button"
+                aria-label={isPlaying ? '重新播放音效' : '播放音效'}
+                onClick={() => { void handlePlay(); }}
+              >
+                <span className="play-button__icon" aria-hidden="true">{isPlaying ? '↻' : '▶'}</span>
+                <span className="play-button__copy">
+                  <span className="play-button__label">{isPlaying ? '重新播放' : '播放音效'}</span>
+                  <small>{isPlaying ? '从头试听当前音效' : '立即试听当前音效'}</small>
+                </span>
               </button>
             </div>
 
@@ -604,7 +624,6 @@ export default function GameSfxGenerator() {
             <div className="option-card option-card--monitor">
               <span>预计导出体积</span>
               <strong>{formatBytes(rendered.stats.estimatedByteSize)}</strong>
-              <small>本地生成的单声道 WAV 文件，不经过任何服务器。</small>
             </div>
 
             <div className="export-actions">

@@ -86,23 +86,37 @@ describe('GameSfxGenerator', () => {
   it('renders the redesigned workbench with default section states', () => {
     render(<GameSfxGenerator />);
 
-    expect(screen.getByRole('heading', { name: '音效工作台' })).not.toBeNull();
     expect(screen.getByRole('toolbar', { name: '音效预设' })).not.toBeNull();
-    expect(screen.getByRole('heading', { name: '预览台' })).not.toBeNull();
+    expect(screen.getByRole('heading', { name: '预览' })).not.toBeNull();
     expect(screen.getByRole('heading', { name: '导出' })).not.toBeNull();
 
-    expect(screen.getByRole('button', { name: /包络/ }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /声音轮廓/ }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByRole('button', { name: /频率/ }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByRole('button', { name: /调制/ }).getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByRole('button', { name: /质感/ }).getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByRole('button', { name: /滤波/ }).getAttribute('aria-expanded')).toBe('false');
 
-    expect(screen.getByRole('button', { name: '播放' })).not.toBeNull();
-    expect(screen.getByRole('button', { name: '停止' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: '播放预览' })).not.toBeNull();
     expect(screen.getByRole('button', { name: '复制 JSON' })).not.toBeNull();
     expect(screen.getByRole('button', { name: '应用 JSON' })).not.toBeNull();
     expect(screen.getByRole('button', { name: '导出 WAV' })).not.toBeNull();
     expect(screen.getByRole('button', { name: '导出 JSON' })).not.toBeNull();
+  });
+
+  it('shows selected feedback for the active preset', async () => {
+    const user = userEvent.setup();
+
+    render(<GameSfxGenerator />);
+
+    const mutateButton = screen.getByRole('button', { name: /变异/ });
+    const coinButton = screen.getByRole('button', { name: /金币/ });
+
+    expect(mutateButton.getAttribute('aria-pressed')).toBe('false');
+    expect(coinButton.getAttribute('aria-pressed')).toBe('false');
+
+    await user.click(coinButton);
+    expect(coinButton.getAttribute('aria-pressed')).toBe('true');
+    expect(mutateButton.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('keeps the primary actions wired after the redesign', async () => {
@@ -110,11 +124,11 @@ describe('GameSfxGenerator', () => {
 
     render(<GameSfxGenerator />);
 
-    await user.click(screen.getByRole('button', { name: '播放' }));
+    await user.click(screen.getByRole('button', { name: '播放预览' }));
     expect(screen.getByRole('status').textContent).toContain('正在播放当前音效。');
 
-    await user.click(screen.getByRole('button', { name: '停止' }));
-    expect(screen.getByRole('status').textContent).toContain('已停止播放。');
+    await user.click(screen.getByRole('button', { name: '重新播放预览' }));
+    expect(screen.getByRole('status').textContent).toContain('正在播放当前音效。');
 
     await user.click(screen.getByRole('button', { name: '应用 JSON' }));
     expect(screen.getByRole('status').textContent).toContain('参数 JSON 已应用。');
