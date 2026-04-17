@@ -2,11 +2,7 @@
 
 一个面向独立开发者与开源项目的浏览器端游戏音效生成器，专注于快速制作 `sfxr` 风格的复古与街机音效。你可以直接选择预设、调整参数、实时试听，并导出可用于游戏项目的音频与参数文件。
 
-> 当前 README 以中文为默认语言，后续如有需要可再补完整英文版文档。
-
-## 在线体验
-
-- GitHub Pages: [mowangblog.github.io/game-sfx-generator-web](https://mowangblog.github.io/game-sfx-generator-web/)
+- 在线体验: [mowangblog.github.io/game-sfx-generator-web](https://mowangblog.github.io/game-sfx-generator-web/)
 
 ## 功能亮点
 
@@ -15,11 +11,6 @@
 - 浏览器内实时试听，无需上传任何素材
 - 支持导出 `WAV` 音频文件
 - 支持导出与重新导入参数 `JSON`
-- 已从原始多功能工具仓库中拆分为独立项目，更适合单独维护与开源展示
-
-## 为什么单独拆仓库
-
-这个仓库只保留“游戏音效生成器”这一条清晰能力线。拆分之后，项目结构、品牌表达、部署方式和后续迭代都会更轻，更适合对外展示、持续维护和接受社区贡献。
 
 ## 本地开发
 
