@@ -1,86 +1,78 @@
-# Retro SFX Lab
+# Retro SFX Lab / 复古游戏音效生成器
 
-Retro SFX Lab is an open-source browser tool for generating crunchy retro and arcade-style game sound effects. It focuses on the fast `sfxr`-style workflow: pick a preset, tweak parameters, preview instantly, and export the result for your game.
+一个面向独立开发者与开源项目的浏览器端游戏音效生成器，专注于快速制作 `sfxr` 风格的复古与街机音效。你可以直接选择预设、调整参数、实时试听，并导出可用于游戏项目的音频与参数文件。
 
-## Live Demo
+> 当前 README 以中文为默认语言，后续如有需要可再补完整英文版文档。
+
+## 在线体验
 
 - GitHub Pages: [mowangblog.github.io/game-sfx-generator-web](https://mowangblog.github.io/game-sfx-generator-web/)
 
-## Screenshots
+## 功能亮点
 
-### Landing View
+- 基于 `sfxr` / `jsfxr` 思路的程序化音效生成
+- 内置金币、激光、爆炸、跳跃、点击、强化等常用预设
+- 浏览器内实时试听，无需上传任何素材
+- 支持导出 `WAV` 音频文件
+- 支持导出与重新导入参数 `JSON`
+- 已从原始多功能工具仓库中拆分为独立项目，更适合单独维护与开源展示
 
-![Retro SFX Lab preview](./docs/preview.svg)
+## 为什么单独拆仓库
 
-### Generator Workbench
+这个仓库只保留“游戏音效生成器”这一条清晰能力线。拆分之后，项目结构、品牌表达、部署方式和后续迭代都会更轻，更适合对外展示、持续维护和接受社区贡献。
 
-![Retro SFX Lab workbench overview](./docs/workbench-overview.svg)
+## 本地开发
 
-## Highlights
-
-- Procedural sound generation inspired by `sfxr` and `jsfxr`
-- Fast presets for coin, laser, explosion, jump, click, pickup, and more
-- Realtime browser playback while tuning parameters
-- Export generated audio as `WAV`
-- Export and re-import parameter sets as `JSON`
-- Focused standalone repo extracted from a larger media tooling project
-
-## Why This Repo Exists
-
-This repository is the dedicated home for the game sound generator experience. It was split out from a broader toolset so the audio workflow can be easier to maintain, present, and iterate on as an independent open-source project.
-
-## Local Development
-
-Install dependencies:
+安装依赖：
 
 ```bash
 npm install
 ```
 
-Start the dev server:
+启动开发服务器：
 
 ```bash
 npm run dev
 ```
 
-Run tests:
+运行测试：
 
 ```bash
 npm run test
 ```
 
-Create a production build:
+构建生产版本：
 
 ```bash
 npm run build
 ```
 
-## GitHub Pages Deployment
+## GitHub Pages 部署
 
-This repo includes a GitHub Actions workflow at `.github/workflows/deploy.yml`.
+仓库已内置 GitHub Actions 工作流：`.github/workflows/deploy.yml`。
 
-To enable deployment:
+启用方式：
 
-1. Open the repository on GitHub.
-2. Go to `Settings` -> `Pages`.
-3. Set `Source` to `GitHub Actions`.
-4. Push to `main` and GitHub will publish the contents of `dist/` automatically.
+1. 打开 GitHub 仓库。
+2. 进入 `Settings` -> `Pages`。
+3. 将 `Source` 设置为 `GitHub Actions`。
+4. 后续只要推送到 `main`，GitHub 就会自动构建并发布 `dist/` 内容。
 
-The Vite `base` path is already configured for this repository, so the deployed app will load correctly from `/game-sfx-generator-web/`.
+当前 Vite 的 `base` 路径已经为该仓库配置好，发布后可直接在 `/game-sfx-generator-web/` 下正常访问。
 
-## Tech Stack
+## 技术栈
 
 - `React`
 - `TypeScript`
 - `Vite`
 - `Vitest`
 
-## Roadmap
+## 路线图
 
-- More curated preset banks for common game genres
-- Sharable preset URLs or importable preset packs
-- Additional waveform and modulation controls
-- Small gallery of ready-to-use example sounds
+- 增加更多面向不同游戏类型的预设组合
+- 支持可分享的参数链接或预设包
+- 补充更多波形、调制与滤波控制
+- 增加一组可直接复用的示例音效库
 
 ## License
 
