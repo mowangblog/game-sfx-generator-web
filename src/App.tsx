@@ -76,17 +76,6 @@ function App() {
 
       <main className="app-shell">
         <section className="hero">
-          <div className="hero-brand">
-            <img
-              className="hero-brand__avatar"
-              src={BRAND_ASSET_PATH}
-              alt="mowangblog 官方标识"
-            />
-            <div className="hero-brand__info">
-              <p className="eyebrow">今天又被 Godot 打了</p>
-            </div>
-          </div>
-
           <h1 className="hero-title">
             <span className="hero-title__main">复古游戏音效生成器</span>
             <span className="hero-title__version">1.0</span>
