@@ -30,6 +30,69 @@ describe('sfx renderer', () => {
     expect(rendered.stats.peak).toBeGreaterThan(0.05);
   });
 
+  it('renders the footstep engine with terrain-specific output', () => {
+    const rendered = renderSfx(
+      {
+        ...DEFAULT_SFX_PARAMS,
+        engine: 'footsteppr',
+        footstepTerrain: 'gravel',
+        footstepHeel: 0.72,
+        footstepRoll: 0.44,
+        footstepBall: 0.52,
+        footstepSwiftness: 0.58,
+      },
+      {
+        sampleRate: 22050,
+        bitDepth: 16,
+      },
+    );
+
+    expect(rendered.samples.length).toBe(rendered.stats.samples);
+    expect(rendered.samples.length).toBeGreaterThan(1500);
+    expect(rendered.stats.durationSeconds).toBeGreaterThan(0.2);
+    expect(rendered.stats.peak).toBeLessThanOrEqual(1);
+    expect(rendered.stats.peak).toBeGreaterThan(0.02);
+  });
+
+  it('produces distinct buffers for different footstep terrains', () => {
+    const snow = renderSfx(
+      {
+        ...DEFAULT_SFX_PARAMS,
+        engine: 'footsteppr',
+        footstepTerrain: 'snow',
+        footstepHeel: 0.52,
+        footstepRoll: 0.46,
+        footstepBall: 0.41,
+        footstepSwiftness: 0.63,
+      },
+      {
+        sampleRate: 22050,
+        bitDepth: 16,
+      },
+    );
+    const gravel = renderSfx(
+      {
+        ...DEFAULT_SFX_PARAMS,
+        engine: 'footsteppr',
+        footstepTerrain: 'gravel',
+        footstepHeel: 0.52,
+        footstepRoll: 0.46,
+        footstepBall: 0.41,
+        footstepSwiftness: 0.63,
+      },
+      {
+        sampleRate: 22050,
+        bitDepth: 16,
+      },
+    );
+
+    const difference = Array.from({ length: 256 }).reduce<number>((sum, _, index) => (
+      sum + Math.abs((snow.samples[index] ?? 0) - (gravel.samples[index] ?? 0))
+    ), 0);
+
+    expect(difference).toBeGreaterThan(0.5);
+  });
+
   it('serializes to a valid wav header', async () => {
     const wav = encodeSfxWav(Float32Array.from([0, -1, 1, 0.5]), 8000, 8);
     const bytes = new Uint8Array(await readBlobAsArrayBuffer(wav));

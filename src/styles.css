@@ -974,6 +974,22 @@ textarea,
   gap: 14px;
 }
 
+.history-panel__head {
+  align-items: end;
+}
+
+.history-panel__tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.history-panel__tools > .export-menu {
+  min-width: 148px;
+}
+
 .history-empty {
   display: grid;
   gap: 8px;
@@ -1193,6 +1209,11 @@ textarea,
   .history-card__head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .history-panel__tools {
+    display: grid;
+    justify-items: stretch;
   }
 
   .export-menu__list {

@@ -1,4 +1,6 @@
 export type SfxWaveform = 'square' | 'sawtooth' | 'sine' | 'noise';
+export type SfxEngine = 'sfxr' | 'footsteppr';
+export type SfxFootstepTerrain = 'snow' | 'grass' | 'dirt' | 'gravel';
 
 export type SfxPresetId =
   | 'random'
@@ -8,6 +10,10 @@ export type SfxPresetId =
   | 'powerup'
   | 'hitHurt'
   | 'jump'
+  | 'footstepSnow'
+  | 'footstepGrass'
+  | 'footstepDirt'
+  | 'footstepGravel'
   | 'click'
   | 'blipSelect'
   | 'synth'
@@ -15,7 +21,13 @@ export type SfxPresetId =
   | 'mutate';
 
 export type SfxParams = {
+  engine: SfxEngine;
   waveform: SfxWaveform;
+  footstepTerrain: SfxFootstepTerrain;
+  footstepHeel: number;
+  footstepRoll: number;
+  footstepBall: number;
+  footstepSwiftness: number;
   attack: number;
   sustain: number;
   sustainPunch: number;
@@ -63,7 +75,13 @@ export type SfxRenderResult = {
 };
 
 export const DEFAULT_SFX_PARAMS: SfxParams = {
+  engine: 'sfxr',
   waveform: 'square',
+  footstepTerrain: 'dirt',
+  footstepHeel: 0.5,
+  footstepRoll: 0.5,
+  footstepBall: 0.5,
+  footstepSwiftness: 0.5,
   attack: 0,
   sustain: 0.18,
   sustainPunch: 0.28,
@@ -97,6 +115,10 @@ export const SFX_PRESET_ORDER: SfxPresetId[] = [
   'powerup',
   'hitHurt',
   'jump',
+  'footstepSnow',
+  'footstepGrass',
+  'footstepDirt',
+  'footstepGravel',
   'click',
   'blipSelect',
   'synth',
@@ -105,6 +127,8 @@ export const SFX_PRESET_ORDER: SfxPresetId[] = [
 ];
 
 const PHASER_BUFFER_SIZE = 2048;
+const PD_COSTABLE_SIZE = 2048;
+const PD_COSTABLE = createPdCosTable();
 const MAX_FREQUENCY = 12000;
 const MIN_DURATION_SECONDS = 0.18;
 
@@ -115,7 +139,13 @@ export function clampSfxParams(params: Partial<SfxParams>): SfxParams {
   };
 
   return {
+    engine: merged.engine === 'footsteppr' ? 'footsteppr' : 'sfxr',
     waveform: isWaveform(merged.waveform) ? merged.waveform : DEFAULT_SFX_PARAMS.waveform,
+    footstepTerrain: isFootstepTerrain(merged.footstepTerrain) ? merged.footstepTerrain : DEFAULT_SFX_PARAMS.footstepTerrain,
+    footstepHeel: clamp(merged.footstepHeel, 0, 1),
+    footstepRoll: clamp(merged.footstepRoll, 0, 1),
+    footstepBall: clamp(merged.footstepBall, 0, 1),
+    footstepSwiftness: clamp(merged.footstepSwiftness, 0, 1),
     attack: clamp(merged.attack, 0, 1),
     sustain: clamp(merged.sustain, 0, 1),
     sustainPunch: clamp(merged.sustainPunch, 0, 1),
@@ -152,6 +182,17 @@ export function deserializeSfxParams(serialized: string): SfxParams {
 }
 
 export function mutateSfxParams(current: SfxParams): SfxParams {
+  if (current.engine === 'footsteppr') {
+    return clampSfxParams({
+      ...current,
+      footstepHeel: current.footstepHeel + randomRange(-0.12, 0.12),
+      footstepRoll: current.footstepRoll + randomRange(-0.12, 0.12),
+      footstepBall: current.footstepBall + randomRange(-0.12, 0.12),
+      footstepSwiftness: current.footstepSwiftness + randomRange(-0.1, 0.1),
+      masterVolume: current.masterVolume + randomRange(-0.05, 0.05),
+    });
+  }
+
   return clampSfxParams({
     ...current,
     attack: current.attack + randomRange(-0.08, 0.08),
@@ -302,6 +343,105 @@ export function createSfxPreset(
         highPassCutoff: randomRange(0.02, 0.1),
         masterVolume: 0.54,
       });
+    case 'footstepSnow':
+      return clampSfxParams({
+        engine: 'footsteppr',
+        waveform: 'noise',
+        footstepTerrain: 'snow',
+        footstepHeel: randomRange(0.28, 0.42),
+        footstepRoll: randomRange(0.72, 0.9),
+        footstepBall: randomRange(0.36, 0.56),
+        footstepSwiftness: randomRange(0.34, 0.5),
+        attack: randomRange(0.01, 0.05),
+        sustain: randomRange(0.06, 0.14),
+        sustainPunch: randomRange(0.14, 0.3),
+        decay: randomRange(0.08, 0.16),
+        startFrequency: randomRange(0.12, 0.24),
+        minFrequency: randomRange(0.02, 0.08),
+        slide: randomRange(-0.18, 0),
+        squareDuty: randomRange(0.2, 0.45),
+        repeatSpeed: randomRange(0.02, 0.08),
+        lowPassCutoff: randomRange(0.26, 0.46),
+        lowPassSweep: randomRange(-0.06, 0.04),
+        lowPassResonance: randomRange(0.08, 0.22),
+        highPassCutoff: randomRange(0.08, 0.16),
+        highPassSweep: randomRange(-0.02, 0.04),
+        masterVolume: 0.48,
+      });
+    case 'footstepGrass':
+      return clampSfxParams({
+        engine: 'footsteppr',
+        waveform: 'noise',
+        footstepTerrain: 'grass',
+        footstepHeel: randomRange(0.28, 0.4),
+        footstepRoll: randomRange(0.56, 0.74),
+        footstepBall: randomRange(0.44, 0.66),
+        footstepSwiftness: randomRange(0.42, 0.58),
+        attack: randomRange(0.01, 0.03),
+        sustain: randomRange(0.05, 0.12),
+        sustainPunch: randomRange(0.1, 0.24),
+        decay: randomRange(0.08, 0.14),
+        startFrequency: randomRange(0.18, 0.32),
+        minFrequency: randomRange(0.04, 0.12),
+        slide: randomRange(-0.12, 0.04),
+        repeatSpeed: randomRange(0.03, 0.1),
+        lowPassCutoff: randomRange(0.42, 0.64),
+        lowPassSweep: randomRange(-0.04, 0.05),
+        lowPassResonance: randomRange(0.06, 0.18),
+        highPassCutoff: randomRange(0.1, 0.18),
+        highPassSweep: randomRange(-0.02, 0.04),
+        masterVolume: 0.46,
+      });
+    case 'footstepDirt':
+      return clampSfxParams({
+        engine: 'footsteppr',
+        waveform: Math.random() > 0.75 ? 'square' : 'noise',
+        footstepTerrain: 'dirt',
+        footstepHeel: randomRange(0.48, 0.68),
+        footstepRoll: randomRange(0.48, 0.68),
+        footstepBall: randomRange(0.32, 0.5),
+        footstepSwiftness: randomRange(0.44, 0.62),
+        attack: randomRange(0, 0.02),
+        sustain: randomRange(0.05, 0.11),
+        sustainPunch: randomRange(0.16, 0.32),
+        decay: randomRange(0.09, 0.16),
+        startFrequency: randomRange(0.1, 0.22),
+        minFrequency: randomRange(0.02, 0.08),
+        slide: randomRange(-0.2, -0.04),
+        squareDuty: randomRange(0.1, 0.28),
+        lowPassCutoff: randomRange(0.24, 0.44),
+        lowPassSweep: randomRange(-0.08, 0.02),
+        lowPassResonance: randomRange(0.1, 0.24),
+        highPassCutoff: randomRange(0.04, 0.12),
+        highPassSweep: randomRange(-0.03, 0.02),
+        masterVolume: 0.5,
+      });
+    case 'footstepGravel':
+      return clampSfxParams({
+        engine: 'footsteppr',
+        waveform: 'noise',
+        footstepTerrain: 'gravel',
+        footstepHeel: randomRange(0.56, 0.76),
+        footstepRoll: randomRange(0.34, 0.56),
+        footstepBall: randomRange(0.4, 0.6),
+        footstepSwiftness: randomRange(0.5, 0.7),
+        attack: randomRange(0, 0.02),
+        sustain: randomRange(0.06, 0.16),
+        sustainPunch: randomRange(0.22, 0.42),
+        decay: randomRange(0.1, 0.18),
+        startFrequency: randomRange(0.26, 0.42),
+        minFrequency: randomRange(0.08, 0.16),
+        slide: randomRange(-0.08, 0.08),
+        deltaSlide: randomRange(-0.03, 0.03),
+        repeatSpeed: randomRange(0.04, 0.14),
+        phaserOffset: randomRange(-0.08, 0.08),
+        phaserSweep: randomRange(-0.02, 0.02),
+        lowPassCutoff: randomRange(0.52, 0.78),
+        lowPassResonance: randomRange(0.04, 0.16),
+        highPassCutoff: randomRange(0.16, 0.28),
+        highPassSweep: randomRange(0, 0.05),
+        masterVolume: 0.5,
+      });
     case 'click':
       return clampSfxParams({
         waveform: 'square',
@@ -366,6 +506,9 @@ export function renderSfx(
   options: SfxRenderOptions,
 ): SfxRenderResult {
   const safeParams = clampSfxParams(params);
+  if (safeParams.engine === 'footsteppr') {
+    return renderFootsteppr(safeParams, options);
+  }
   const attackSeconds = safeParams.attack * 0.4;
   const sustainSeconds = 0.02 + safeParams.sustain * 1.2;
   const decaySeconds = safeParams.decay * 1.8;
@@ -527,6 +670,52 @@ export function renderSfx(
   };
 }
 
+function renderFootsteppr(
+  params: SfxParams,
+  options: SfxRenderOptions,
+): SfxRenderResult {
+  const durationSeconds = 0.1 + 0.7 * (1 - params.footstepSwiftness);
+  const internalSampleRate = 44100;
+  const totalSamples = Math.max(1, Math.floor(durationSeconds * internalSampleRate));
+  const envelopeSignal = createFootstepEnvelopeSignal(totalSamples, internalSampleRate, params);
+  const rawSignal = renderFootstepTerrain(
+    params.footstepTerrain,
+    envelopeSignal,
+    internalSampleRate,
+  );
+  const scaledSignal = pdMulScalar(rawSignal, params.masterVolume);
+  const clippedSignal = pdClip(scaledSignal, -1, 1);
+  const boostedSignal = pdMulScalar(clippedSignal, 4);
+  const outputSignal = options.sampleRate === internalSampleRate
+    ? boostedSignal
+    : resampleSignal(boostedSignal, internalSampleRate, options.sampleRate);
+  const samples = new Float32Array(outputSignal.length);
+  let clippedSamples = 0;
+  let peak = 0;
+
+  for (let index = 0; index < outputSignal.length; index += 1) {
+    const sample = outputSignal[index] ?? 0;
+    if (Math.abs(sample) > 1) {
+      clippedSamples += 1;
+    }
+
+    const clampedSample = clamp(sample, -1, 1);
+    peak = Math.max(peak, Math.abs(clampedSample));
+    samples[index] = clampedSample;
+  }
+
+  return {
+    samples,
+    stats: {
+      durationSeconds,
+      samples: outputSignal.length,
+      clippedSamples,
+      peak,
+      estimatedByteSize: 44 + outputSignal.length * (options.bitDepth / 8),
+    },
+  };
+}
+
 export function encodeSfxWav(
   samples: Float32Array,
   sampleRate: SfxSampleRate,
@@ -624,6 +813,407 @@ function getEnvelopeLevel(
   return 0;
 }
 
+function createFootstepEnvelopeSignal(
+  totalSamples: number,
+  sampleRate: number,
+  params: SfxParams,
+): Float32Array {
+  const stepLength = totalSamples / sampleRate;
+  const heelEnvelope = resizeFn(stepFn(params.footstepHeel), 0, 1, 0, 0.3333);
+  const rollEnvelope = resizeFn(stepFn(params.footstepRoll), 0, 1, 0.125, 0.875);
+  const ballEnvelope = resizeFn(stepFn(params.footstepBall), 0, 1, 0.6667, 1);
+  const baseEnvelope = (time: number): number => (
+    heelEnvelope(time) + rollEnvelope(time) + ballEnvelope(time)
+  );
+  const resizedEnvelope = resizeFn(baseEnvelope, 0, 1, 0, stepLength);
+  const envelope = new Float32Array(totalSamples);
+
+  for (let index = 0; index < totalSamples; index += 1) {
+    envelope[index] = resizedEnvelope(index / sampleRate);
+  }
+
+  return envelope;
+}
+
+function renderFootstepTerrain(
+  terrain: SfxFootstepTerrain,
+  envelope: Float32Array,
+  sampleRate: number,
+): Float32Array {
+  switch (terrain) {
+    case 'snow':
+      return renderSnowTerrain(envelope, sampleRate);
+    case 'grass':
+      return renderGrassTerrain(envelope, sampleRate);
+    case 'dirt':
+      return renderDirtTerrain(envelope, sampleRate);
+    case 'gravel':
+      return renderGravelTerrain(envelope, sampleRate);
+    default:
+      return new Float32Array(envelope.length);
+  }
+}
+
+function renderSnowTerrain(envelope: Float32Array, sampleRate: number): Float32Array {
+  const crunchNoise = pdNoise(envelope.length);
+  const crunchLow = pdLop(crunchNoise, pdConstant(envelope.length, 110), sampleRate);
+  const crunchHigh = pdLop(crunchNoise, pdConstant(envelope.length, 900), sampleRate);
+  const crunchRatio = pdDiv(crunchLow, crunchHigh);
+
+  const powderNoise = pdNoise(envelope.length);
+  const powderBed = pdLop(powderNoise, pdConstant(envelope.length, 50), sampleRate);
+  const powderTop = pdLop(powderNoise, pdConstant(envelope.length, 70), sampleRate);
+  const powderRatio = pdDiv(powderBed, powderTop);
+
+  const shapeNoise = pdNoise(envelope.length);
+  const shapeLow = pdLop(shapeNoise, pdConstant(envelope.length, 10), sampleRate);
+  const shapeScaled = pdMulScalar(shapeLow, 17);
+  const powderShape = pdAdd(pdMul(shapeScaled, shapeScaled), pdConstant(envelope.length, 0.5));
+
+  const combined = pdMul(pdMul(crunchRatio, powderRatio), powderShape);
+  const clipped = pdClip(combined, -1, 1);
+  const brightened = pdHip(clipped, pdConstant(envelope.length, 300), sampleRate);
+  const sweep = pdAdd(pdMulScalar(envelope, 9000), pdConstant(envelope.length, 700));
+  const resonant = pdVcf(brightened, sweep, pdConstant(envelope.length, 0.5), sampleRate);
+  return pdMulScalar(pdMul(resonant, envelope), 0.2);
+}
+
+function renderGrassTerrain(envelope: Float32Array, sampleRate: number): Float32Array {
+  const envelopeSquared = pdMul(envelope, envelope);
+  const envelopeFourth = pdMul(envelopeSquared, envelopeSquared);
+  const bodyFrequency = pdAdd(pdMulScalar(envelopeFourth, 600), pdConstant(envelope.length, 30));
+  const bodyOsc = pdOsc(bodyFrequency, sampleRate);
+  const body = pdMulScalar(
+    pdMul(pdClip(bodyOsc, 0, 0.5), envelopeFourth),
+    0.8,
+  );
+
+  const rustleNoise = pdNoise(envelope.length);
+  const noiseLow16 = pdLop(rustleNoise, pdConstant(envelope.length, 16), sampleRate);
+  const noiseLow300 = pdLop(rustleNoise, pdConstant(envelope.length, 300), sampleRate);
+  const noiseLow2000 = pdLop(rustleNoise, pdConstant(envelope.length, 2000), sampleRate);
+  const rustleRatio = pdDiv(noiseLow300, noiseLow2000);
+  const rustleHigh = pdHip(rustleRatio, pdConstant(envelope.length, 2500), sampleRate);
+  const rustleSquared = pdMul(rustleHigh, rustleHigh);
+  const rustleFourth = pdMul(rustleSquared, rustleSquared);
+  const rustleInput = pdClip(pdMulScalar(rustleFourth, 0.00001), -0.9, 0.9);
+  const rustleSweep = pdClip(
+    pdAdd(pdMulScalar(noiseLow16, 23800), pdConstant(envelope.length, 3400)),
+    2000,
+    10000,
+  );
+  const rustleFiltered = pdVcf(
+    rustleInput,
+    rustleSweep,
+    pdConstant(envelope.length, 1),
+    sampleRate,
+  );
+  const rustle = pdMul(
+    pdMulScalar(pdHip(rustleFiltered, pdConstant(envelope.length, 900), sampleRate), 0.3),
+    envelope,
+  );
+
+  return pdAdd(body, rustle);
+}
+
+function renderDirtTerrain(envelope: Float32Array, sampleRate: number): Float32Array {
+  const envelopeSquared = pdMul(envelope, envelope);
+  const envelopeFourth = pdMul(envelopeSquared, envelopeSquared);
+  const thudFrequency = pdAdd(pdMulScalar(envelopeFourth, 500), pdConstant(envelope.length, 40));
+  const thud = pdMulScalar(pdMul(pdOsc(thudFrequency, sampleRate), envelopeFourth), 0.5);
+
+  const dirtNoise = pdNoise(envelope.length);
+  const dirtDriver = pdMul(
+    pdAdd(envelope, pdConstant(envelope.length, 0.3)),
+    pdMulScalar(pdLop(dirtNoise, pdConstant(envelope.length, 80), sampleRate), 70),
+  );
+  const gritFrequency = pdAdd(pdMulScalar(dirtDriver, 70), pdConstant(envelope.length, 70));
+  const gritTone = pdOsc(gritFrequency, sampleRate);
+  const grit = pdMulScalar(
+    pdClip(pdHip(gritTone, pdConstant(envelope.length, 200), sampleRate), -1, 1),
+    0.04,
+  );
+
+  return pdAdd(thud, grit);
+}
+
+function renderGravelTerrain(envelope: Float32Array, sampleRate: number): Float32Array {
+  const gravelNoise = pdNoise(envelope.length);
+  const low300 = pdLop(gravelNoise, pdConstant(envelope.length, 300), sampleRate);
+  const low2000 = pdLop(gravelNoise, pdConstant(envelope.length, 2000), sampleRate);
+  const gritRatio = pdDiv(low300, low2000);
+  const gritHigh = pdHip(gritRatio, pdConstant(envelope.length, 400), sampleRate);
+  const gritSquared = pdMul(gritHigh, gritHigh);
+  const gritInput = pdClip(pdMulScalar(gritSquared, 0.01), -0.9, 0.9);
+  const gritSweep = pdClip(
+    pdAdd(
+      pdMulScalar(pdLop(gravelNoise, pdConstant(envelope.length, 50), sampleRate), 50000),
+      pdMulScalar(envelope, 1000),
+    ),
+    500,
+    10000,
+  );
+  const gritFiltered = pdVcf(
+    gritInput,
+    gritSweep,
+    pdConstant(envelope.length, 3),
+    sampleRate,
+  );
+  return pdMul(
+    pdMulScalar(pdHip(gritFiltered, pdConstant(envelope.length, 200), sampleRate), 2),
+    envelope,
+  );
+}
+
+function stepFn(threshold: number): (time: number) => number {
+  return (time: number) => {
+    if (time <= 0 || time >= 1) {
+      return 0;
+    }
+
+    return -1.5 * (1 - time) * (threshold * time * time * time - threshold * time);
+  };
+}
+
+function resizeFn(
+  fn: (time: number) => number,
+  inputStart: number,
+  inputEnd: number,
+  outputStart: number,
+  outputEnd: number,
+): (time: number) => number {
+  return (time: number) => fn(
+    ((time - outputStart) / (outputEnd - outputStart)) * (inputEnd - inputStart) + inputStart,
+  );
+}
+
+function pdConstant(length: number, value: number): Float32Array {
+  const signal = new Float32Array(length);
+  signal.fill(value);
+  return signal;
+}
+
+function pdNoise(length: number): Float32Array {
+  const signal = new Float32Array(length);
+  for (let index = 0; index < length; index += 1) {
+    signal[index] = randomSigned();
+  }
+  return signal;
+}
+
+function pdAdd(left: Float32Array, right: Float32Array): Float32Array {
+  const result = new Float32Array(left.length);
+  for (let index = 0; index < left.length; index += 1) {
+    result[index] = (left[index] ?? 0) + (right[index] ?? 0);
+  }
+  return result;
+}
+
+function pdMul(left: Float32Array, right: Float32Array): Float32Array {
+  const result = new Float32Array(left.length);
+  for (let index = 0; index < left.length; index += 1) {
+    result[index] = (left[index] ?? 0) * (right[index] ?? 0);
+  }
+  return result;
+}
+
+function pdMulScalar(signal: Float32Array, value: number): Float32Array {
+  const result = new Float32Array(signal.length);
+  for (let index = 0; index < signal.length; index += 1) {
+    result[index] = (signal[index] ?? 0) * value;
+  }
+  return result;
+}
+
+function pdDiv(left: Float32Array, right: Float32Array): Float32Array {
+  const result = new Float32Array(left.length);
+  for (let index = 0; index < left.length; index += 1) {
+    result[index] = (left[index] ?? 0) / (right[index] ?? 0);
+  }
+  return result;
+}
+
+function pdClip(signal: Float32Array, min: number, max: number): Float32Array {
+  const result = new Float32Array(signal.length);
+  for (let index = 0; index < signal.length; index += 1) {
+    const sample = signal[index] ?? 0;
+    if (Number.isNaN(sample)) {
+      result[index] = 0;
+    } else if (sample === Number.POSITIVE_INFINITY) {
+      result[index] = max;
+    } else if (sample === Number.NEGATIVE_INFINITY) {
+      result[index] = min;
+    } else if (sample > max) {
+      result[index] = max;
+    } else if (sample < min) {
+      result[index] = min;
+    } else {
+      result[index] = sample;
+    }
+  }
+  return result;
+}
+
+function pdOsc(frequencySignal: Float32Array, sampleRate: number): Float32Array {
+  const result = new Float32Array(frequencySignal.length);
+  const conversionFactor = (2 * Math.PI) / sampleRate;
+  let phase = 0;
+
+  for (let index = 0; index < frequencySignal.length; index += 1) {
+    phase += (frequencySignal[index] ?? 0) * conversionFactor;
+    while (phase >= Math.PI) {
+      phase -= Math.PI * 2;
+    }
+    while (phase < -Math.PI) {
+      phase += Math.PI * 2;
+    }
+
+    const tableIndex = ((phase + Math.PI) / (Math.PI * 2)) * PD_COSTABLE_SIZE;
+    const indexFloor = Math.floor(tableIndex);
+    const wrappedIndex = ((indexFloor % PD_COSTABLE_SIZE) + PD_COSTABLE_SIZE) % PD_COSTABLE_SIZE;
+    const nextIndex = (wrappedIndex + 1) % PD_COSTABLE_SIZE;
+    const fraction = tableIndex - indexFloor;
+    const valueA = PD_COSTABLE[wrappedIndex] ?? 0;
+    const valueB = PD_COSTABLE[nextIndex] ?? valueA;
+    result[index] = valueA + fraction * (valueB - valueA);
+  }
+
+  return result;
+}
+
+function pdLop(signal: Float32Array, cutoffSignal: Float32Array, sampleRate: number): Float32Array {
+  const result = new Float32Array(signal.length);
+  const conversionFactor = (2 * Math.PI) / sampleRate;
+  let last = signal[0] ?? 0;
+
+  for (let index = 0; index < signal.length; index += 1) {
+    let coefficient = (cutoffSignal[index] ?? 0) * conversionFactor;
+    coefficient = clamp(coefficient, 0, 1);
+    last = coefficient * (signal[index] ?? 0) + (1 - coefficient) * last;
+    result[index] = last;
+  }
+
+  return result;
+}
+
+function pdHip(signal: Float32Array, cutoffSignal: Float32Array, sampleRate: number): Float32Array {
+  const result = new Float32Array(signal.length);
+  const conversionFactor = (2 * Math.PI) / sampleRate;
+  let last = signal[0] ?? 0;
+
+  for (let index = 0; index < signal.length; index += 1) {
+    const frequency = cutoffSignal[index] ?? 0;
+    let coefficient = 1 - frequency * conversionFactor;
+    coefficient = clamp(coefficient, 0, 1);
+
+    if (coefficient < 1) {
+      const normal = 0.5 * (1 + coefficient);
+      const current = (signal[index] ?? 0) + coefficient * last;
+      result[index] = normal * (current - last);
+      last = current;
+    } else {
+      result[index] = signal[index] ?? 0;
+    }
+  }
+
+  return result;
+}
+
+function pdVcf(
+  signal: Float32Array,
+  resonanceFrequencySignal: Float32Array,
+  qSignal: Float32Array,
+  sampleRate: number,
+): Float32Array {
+  const result = new Float32Array(signal.length);
+  const conversionFactor = (2 * Math.PI) / sampleRate;
+  let real = 0;
+  let imaginary = 0;
+
+  for (let index = 0; index < signal.length; index += 1) {
+    const q = qSignal[index] ?? 0;
+    const qInverse = q > 0 ? 1 / q : 0;
+    const amplitudeCorrection = 2 - 2 / (q + 2);
+    const angularFrequency = Math.max(0, (resonanceFrequencySignal[index] ?? 0) * conversionFactor);
+    let resonance = qInverse > 0 ? 1 - angularFrequency * qInverse : 0;
+    resonance = Math.max(0, resonance);
+    const oneMinusResonance = 1 - resonance;
+    const coefficientReal = resonance * pdCosLookup(angularFrequency);
+    const coefficientImaginary = resonance * pdSinLookup(angularFrequency);
+    const previousReal = real;
+
+    real = amplitudeCorrection * oneMinusResonance * (signal[index] ?? 0)
+      + coefficientReal * previousReal
+      - coefficientImaginary * imaginary;
+    imaginary = coefficientImaginary * previousReal + coefficientReal * imaginary;
+
+    if (Math.abs(real) < 0.0000000001) {
+      real = 0;
+    }
+    if (Math.abs(imaginary) < 0.0000000001) {
+      imaginary = 0;
+    }
+
+    result[index] = real;
+  }
+
+  return result;
+}
+
+function createPdCosTable(): Float32Array {
+  const table = new Float32Array(PD_COSTABLE_SIZE + 1);
+  for (let index = 0; index < PD_COSTABLE_SIZE; index += 1) {
+    table[index] = Math.cos((2 * Math.PI * index) / PD_COSTABLE_SIZE);
+  }
+  table[0] = 1;
+  table[PD_COSTABLE_SIZE] = 1;
+  table[Math.floor(PD_COSTABLE_SIZE / 4)] = 0;
+  table[Math.floor((3 * PD_COSTABLE_SIZE) / 4)] = 0;
+  table[Math.floor(PD_COSTABLE_SIZE / 2)] = -1;
+  return table;
+}
+
+function pdCosLookup(angle: number): number {
+  const tableIndex = angle * (PD_COSTABLE_SIZE / 6.28318);
+  const indexFloor = Math.floor(tableIndex);
+  const wrappedIndex = ((indexFloor % PD_COSTABLE_SIZE) + PD_COSTABLE_SIZE) % PD_COSTABLE_SIZE;
+  const nextIndex = wrappedIndex + 1;
+  const fraction = tableIndex - indexFloor;
+  const valueA = PD_COSTABLE[wrappedIndex] ?? 0;
+  const valueB = PD_COSTABLE[nextIndex] ?? valueA;
+  return valueA + fraction * (valueB - valueA);
+}
+
+function pdSinLookup(angle: number): number {
+  const shiftedAngle = angle - Math.PI / 2;
+  return pdCosLookup(shiftedAngle);
+}
+
+function resampleSignal(
+  signal: Float32Array,
+  fromSampleRate: number,
+  toSampleRate: number,
+): Float32Array {
+  if (signal.length <= 1 || fromSampleRate === toSampleRate) {
+    return signal;
+  }
+
+  const nextLength = Math.max(1, Math.round(signal.length * (toSampleRate / fromSampleRate)));
+  const result = new Float32Array(nextLength);
+
+  for (let index = 0; index < nextLength; index += 1) {
+    const sourcePosition = (index / Math.max(nextLength - 1, 1)) * Math.max(signal.length - 1, 0);
+    const leftIndex = Math.floor(sourcePosition);
+    const rightIndex = Math.min(signal.length - 1, leftIndex + 1);
+    const fraction = sourcePosition - leftIndex;
+    const leftValue = signal[leftIndex] ?? 0;
+    const rightValue = signal[rightIndex] ?? leftValue;
+    result[index] = leftValue + (rightValue - leftValue) * fraction;
+  }
+
+  return result;
+}
+
 function normalizedFrequency(value: number): number {
   return 32 * 2 ** (clamp(value, 0, 1) * 6.5);
 }
@@ -648,6 +1238,10 @@ function randomSigned(): number {
 
 function isWaveform(value: unknown): value is SfxWaveform {
   return value === 'square' || value === 'sawtooth' || value === 'sine' || value === 'noise';
+}
+
+function isFootstepTerrain(value: unknown): value is SfxFootstepTerrain {
+  return value === 'snow' || value === 'grass' || value === 'dirt' || value === 'gravel';
 }
 
 function clamp(value: number, min: number, max: number): number {

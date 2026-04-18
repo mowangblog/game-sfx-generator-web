@@ -1,16 +1,58 @@
 # Retro SFX Lab / 复古游戏音效生成器
 
-一个面向独立开发者与开源项目的浏览器端游戏音效生成器，专注于快速制作 `sfxr` 风格的复古与街机音效。你可以直接选择预设、调整参数、实时试听，并导出可用于游戏项目的音频与参数文件。
+一个运行在浏览器里的复古游戏音效工作台，面向独立游戏开发、原型制作和快速音效迭代。
 
-- 在线体验: [mowangblog.github.io/game-sfx-generator-web](https://mowangblog.github.io/game-sfx-generator-web/)
+基于 `sfxr` 的参数合成思路，支持直接在页面里选择预设、切换波形、调节参数、实时试听，并导出可直接用于项目的音频文件或参数快照。
 
-## 功能亮点
+- 在线体验：[mowangblog.github.io/game-sfx-generator-web](https://mowangblog.github.io/game-sfx-generator-web/)
 
-- 基于 `sfxr` / `jsfxr` 思路的程序化音效生成
-- 内置金币、激光、爆炸、跳跃、点击、强化等常用预设
-- 浏览器内实时试听，无需上传任何素材
-- 支持导出 `WAV` 音频文件
-- 支持导出与重新导入参数 `JSON`
+## 功能概览
+
+- 内置常用复古音效预设：金币、激光、爆炸、跳跃、点击、受击、强化、选择等
+- 支持基础波形切换：方波、锯齿波、正弦波、噪声
+- 参数按分组管理，适合快速微调轮廓、频率、调制、质感和滤波
+- 调整预设、波形和参数后会自动试听，减少来回点播放的操作
+- 右侧预览区提供波形画布、统计信息、采样率和位深切换
+- 支持保存到浏览器本地生成历史，并可随时应用回工作台
+- 支持历史记录单条播放、单条导出、删除和标题重命名
+- 支持一键导出当前音效或历史记录
+- 支持批量导出全部历史记录，并按所选格式打包为 ZIP
+
+## 导出格式
+
+当前支持以下导出格式：
+
+- `WAV`
+- `JSON`
+- `MP3`
+- `OGG`
+
+说明：
+
+- 所有音频都在本地浏览器内生成，不依赖后端服务
+- `JSON` 用于保存和恢复参数快照
+- 历史区的“全部导出”会把所有历史记录按所选格式分别生成后再打成一个 `.zip`
+
+## 生成历史
+
+点击“保存到历史”后，当前音效快照会保存到浏览器缓存。
+
+每条历史记录会保存：
+
+- 名称
+- 保存时间
+- 对应预设或自定义状态
+- 当前参数
+- 波形
+- 采样率
+- 位深
+
+你可以对历史记录执行这些操作：
+
+- `应用`：恢复到当前工作台
+- `播放`：试听该记录，不覆盖当前工作台
+- `导出`：导出该记录
+- `删除`：从历史中移除
 
 ## 本地开发
 
@@ -20,16 +62,10 @@
 npm install
 ```
 
-启动开发服务器：
+启动开发环境：
 
 ```bash
 npm run dev
-```
-
-运行测试：
-
-```bash
-npm run test
 ```
 
 构建生产版本：
@@ -38,32 +74,59 @@ npm run test
 npm run build
 ```
 
-## GitHub Pages 部署
+运行测试：
 
-仓库已内置 GitHub Actions 工作流：`.github/workflows/deploy.yml`。
+```bash
+npm run test
+```
 
-启用方式：
+本地预览生产构建：
 
-1. 打开 GitHub 仓库。
-2. 进入 `Settings` -> `Pages`。
-3. 将 `Source` 设置为 `GitHub Actions`。
-4. 后续只要推送到 `main`，GitHub 就会自动构建并发布 `dist/` 内容。
-
-当前 Vite 的 `base` 路径已经为该仓库配置好，发布后可直接在 `/game-sfx-generator-web/` 下正常访问。
+```bash
+npm run preview
+```
 
 ## 技术栈
 
-- `React`
+- `React 18`
 - `TypeScript`
 - `Vite`
 - `Vitest`
+- `lamejs`
+- `vorbis-encoder-js`
 
-## 路线图
+## 项目结构
 
-- 增加更多面向不同游戏类型的预设组合
-- 支持可分享的参数链接或预设包
-- 补充更多波形、调制与滤波控制
-- 增加一组可直接复用的示例音效库
+```text
+src/
+  components/
+    GameSfxGenerator.tsx
+    GameSfxGenerator.test.tsx
+  lib/
+    sfx.ts
+    sfx.test.ts
+    audioExport.ts
+    zip.ts
+  App.tsx
+  styles.css
+```
+
+## 部署
+
+项目可以直接部署到静态站点环境，例如 GitHub Pages、Vercel 或 Netlify。
+
+如果你使用 GitHub Pages：
+
+1. 在仓库中启用 Pages
+2. 将发布源设置为 `GitHub Actions`
+3. 推送到主分支后执行构建与部署
+
+## 适用场景
+
+- 独立游戏原型阶段快速搓音效
+- Game Jam 或小项目的临时音效生成
+- 菜单点击、拾取反馈、命中、爆炸等复古风格音效制作
+- 导出参数快照，方便多人协作和复用
 
 ## License
 

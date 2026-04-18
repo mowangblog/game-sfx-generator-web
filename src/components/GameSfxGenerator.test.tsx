@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import GameSfxGenerator from './GameSfxGenerator';
@@ -132,7 +132,7 @@ describe('GameSfxGenerator', () => {
     expect(screen.getByRole('heading', { name: '生成历史' })).not.toBeNull();
     expect(screen.getByTestId('history-empty-state')).not.toBeNull();
 
-    expect(screen.getByRole('button', { name: /音量轮廓/ }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /轮廓/ }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByRole('button', { name: /频率/ }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByRole('button', { name: /调制/ }).getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByRole('button', { name: /质感/ }).getAttribute('aria-expanded')).toBe('false');
@@ -180,12 +180,12 @@ describe('GameSfxGenerator', () => {
     expect((screen.getByLabelText('正弦波') as HTMLInputElement).checked).toBe(true);
 
     await user.click(screen.getByRole('button', { name: '应用' }));
-    expect(screen.getByRole('status').textContent).toContain('应用回工作台');
+    expect(screen.getByRole('status').textContent).toContain('已应用回工作台');
     expect((screen.getByLabelText('噪声') as HTMLInputElement).checked).toBe(true);
     expect(screen.getAllByText(/8kHz/).length).toBeGreaterThan(0);
   });
 
-  it('opens unified export menus for the current snapshot and history items', async () => {
+  it('opens export menus for the current snapshot and bulk history export', async () => {
     const user = userEvent.setup();
     render(<GameSfxGenerator />);
 
@@ -195,15 +195,42 @@ describe('GameSfxGenerator', () => {
     expect(screen.getByRole('menuitem', { name: 'Download .mp3' })).not.toBeNull();
     expect(screen.getByRole('menuitem', { name: 'Download .ogg' })).not.toBeNull();
 
+    await user.click(screen.getByRole('menuitem', { name: 'Download .json' }));
+    expect(createObjectUrl).toHaveBeenCalled();
+    expect(anchorClick).toHaveBeenCalled();
+
     await user.click(screen.getByRole('button', { name: '保存当前音效' }));
     await user.keyboard('{Enter}');
 
-    const exportButtons = screen.getAllByRole('button', { name: /导出/ });
-    await user.click(exportButtons[1] as HTMLButtonElement);
-    expect(screen.getAllByRole('menuitem', { name: 'Download .wav' }).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('button', { name: '全部历史导出' }));
+    expect(screen.getByRole('menuitem', { name: 'Download .wav' })).not.toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'Download .json' })).not.toBeNull();
+  });
 
-    await user.click(screen.getAllByRole('menuitem', { name: 'Download .json' })[0] as HTMLButtonElement);
-    expect(createObjectUrl).toHaveBeenCalled();
-    expect(anchorClick).toHaveBeenCalled();
+  it('shows bulk history export and downloads a zip package', async () => {
+    const user = userEvent.setup();
+    render(<GameSfxGenerator />);
+
+    await user.click(screen.getByRole('button', { name: '保存当前音效' }));
+    await user.keyboard('{Enter}');
+
+    await user.click(screen.getByRole('button', { name: '全部历史导出' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Download .json' }));
+
+    await waitFor(() => expect(createObjectUrl).toHaveBeenCalled());
+    await waitFor(() => expect(anchorClick).toHaveBeenCalled());
+    expect(screen.getByRole('status').textContent).toContain('ZIP');
+  });
+
+  it('still renders per-item export controls inside history cards', async () => {
+    const user = userEvent.setup();
+    render(<GameSfxGenerator />);
+
+    await user.click(screen.getByRole('button', { name: '保存当前音效' }));
+    await user.keyboard('{Enter}');
+
+    const historySection = screen.getByRole('region', { name: '生成历史' });
+    const historyButtons = within(historySection).getAllByRole('button');
+    expect(historyButtons.some((button) => button.getAttribute('aria-label')?.endsWith('导出'))).toBe(true);
   });
 });

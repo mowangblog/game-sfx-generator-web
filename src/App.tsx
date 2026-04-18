@@ -77,7 +77,7 @@ function App() {
       <main className="app-shell">
         <section className="hero">
           <h1 className="hero-title">
-            <span className="hero-title__main">复古游戏音效生成器</span>
+            <span className="hero-title__main">游戏音效生成器</span>
             <span className="hero-title__version">1.0</span>
           </h1>
 
@@ -127,7 +127,7 @@ function App() {
             />
             <div className="app-footer__copy">
               <strong>© {currentYear} 今天又被 Godot 打了</strong>
-              <span>复古游戏音效生成器</span>
+              <span>基于sfxr的游戏音效生成器</span>
             </div>
           </div>
           <p className="app-footer__note">免费开源，欢迎一键三连➕关注支持更新。</p>
