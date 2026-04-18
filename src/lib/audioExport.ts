@@ -1,3 +1,4 @@
+import lamejsScriptUrl from 'lamejs/lame.all.js?url';
 import type { SfxSampleRate } from './sfx';
 
 type Mp3EncoderInstance = {
@@ -19,25 +20,57 @@ type VorbisEncoderCtor = new (
   tags?: Record<string, string>,
 ) => VorbisEncoderInstance;
 
-function resolveMp3Encoder(module: unknown): Mp3EncoderCtor {
-  const candidate = module as {
-    Mp3Encoder?: Mp3EncoderCtor;
-    default?: { Mp3Encoder?: Mp3EncoderCtor } | Mp3EncoderCtor;
-  };
+type LameJsGlobal = {
+  Mp3Encoder?: Mp3EncoderCtor;
+};
 
-  if (candidate.Mp3Encoder) {
-    return candidate.Mp3Encoder;
+declare global {
+  interface Window {
+    lamejs?: LameJsGlobal;
+  }
+}
+
+let lameScriptPromise: Promise<Mp3EncoderCtor> | null = null;
+
+function getGlobalMp3Encoder(): Mp3EncoderCtor | null {
+  if (typeof window === 'undefined') {
+    return null;
   }
 
-  if (typeof candidate.default === 'function') {
-    return candidate.default;
+  return window.lamejs?.Mp3Encoder ?? null;
+}
+
+async function loadMp3Encoder(): Promise<Mp3EncoderCtor> {
+  const existing = getGlobalMp3Encoder();
+  if (existing) {
+    return existing;
   }
 
-  if (candidate.default && 'Mp3Encoder' in candidate.default && candidate.default.Mp3Encoder) {
-    return candidate.default.Mp3Encoder;
+  if (!lameScriptPromise) {
+    lameScriptPromise = new Promise<Mp3EncoderCtor>((resolve, reject) => {
+      if (typeof document === 'undefined') {
+        reject(new Error('MP3 encoder can only load in the browser.'));
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = lamejsScriptUrl;
+      script.async = true;
+      script.onload = () => {
+        const encoder = getGlobalMp3Encoder();
+        if (!encoder) {
+          reject(new Error('MP3 encoder loaded but no global entry was found.'));
+          return;
+        }
+
+        resolve(encoder);
+      };
+      script.onerror = () => reject(new Error('Failed to load the MP3 encoder script.'));
+      document.head.appendChild(script);
+    });
   }
 
-  throw new Error('MP3 编码器加载失败。');
+  return lameScriptPromise;
 }
 
 function resolveVorbisEncoder(module: unknown): VorbisEncoderCtor {
@@ -54,7 +87,7 @@ function resolveVorbisEncoder(module: unknown): VorbisEncoderCtor {
     return candidate.default.encoder;
   }
 
-  throw new Error('OGG 编码器加载失败。');
+  throw new Error('Failed to load the OGG encoder.');
 }
 
 function toInt16Pcm(samples: Float32Array): Int16Array {
@@ -74,8 +107,7 @@ export async function encodeMp3FromSamples(
   samples: Float32Array,
   sampleRate: SfxSampleRate,
 ): Promise<Blob> {
-  const module = await import('lamejs');
-  const Mp3Encoder = resolveMp3Encoder(module);
+  const Mp3Encoder = await loadMp3Encoder();
   const encoder = new Mp3Encoder(1, sampleRate, sampleRate >= 32000 ? 128 : 96);
   const pcm = toInt16Pcm(samples);
   const chunks: ArrayBuffer[] = [];
