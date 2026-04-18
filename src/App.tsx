@@ -96,7 +96,7 @@ function App() {
           </div>
 
           <div className="hero-support-row">
-            <p className="hero-copy">永久免费工具，欢迎一键三连与关注支持更新。</p>
+            <p className="hero-copy">免费开源，欢迎一键三连➕关注支持更新。</p>
             <div className="hero-links">
               {SUPPORT_LINKS.map((link) => (
                 <a
@@ -130,7 +130,7 @@ function App() {
               <span>复古游戏音效生成器</span>
             </div>
           </div>
-          <p className="app-footer__note">永久免费工具，欢迎一键三连与关注支持更新。</p>
+          <p className="app-footer__note">免费开源，欢迎一键三连➕关注支持更新。</p>
         </footer>
       </main>
     </div>
