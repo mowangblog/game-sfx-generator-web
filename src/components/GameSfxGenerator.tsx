@@ -232,13 +232,25 @@ function SliderField(props: { label: string; hint: string; value: number; displa
   );
 }
 
-function ExportMenu(props: { menuId: string; label: string; isOpen: boolean; isExporting: boolean; triggerClassName: string; onToggle: (menuId: string) => void; onExport: (format: ExportFormat) => void }) {
-  const { menuId, label, isOpen, isExporting, triggerClassName, onToggle, onExport } = props;
+function ExportMenu(props: { menuId: string; label: string; variant?: 'console' | 'inline'; isOpen: boolean; isExporting: boolean; triggerClassName: string; onToggle: (menuId: string) => void; onExport: (format: ExportFormat) => void }) {
+  const { menuId, label, variant = 'inline', isOpen, isExporting, triggerClassName, onToggle, onExport } = props;
   return (
     <div className={`export-menu ${isOpen ? 'is-open' : ''}`}>
       <button className={triggerClassName} type="button" aria-haspopup="menu" aria-expanded={isOpen} aria-label={label} disabled={isExporting} onClick={() => onToggle(menuId)}>
-        <span>{isExporting ? '导出中...' : '导出'}</span>
-        <span className="export-menu__caret" aria-hidden="true">▾</span>
+        {variant === 'console' ? (
+          <>
+            <span className="export-menu__copy">
+              <span className="export-menu__eyebrow">{isExporting ? 'Encoding' : 'File Output'}</span>
+              <span className="export-menu__title">{isExporting ? '导出中...' : '导出音效'}</span>
+            </span>
+            <span className="export-menu__caret export-menu__caret--console" aria-hidden="true">▾</span>
+          </>
+        ) : (
+          <>
+            <span>{isExporting ? '导出中...' : '导出'}</span>
+            <span className="export-menu__caret" aria-hidden="true">▾</span>
+          </>
+        )}
       </button>
       {isOpen ? (
         <div className="export-menu__list" role="menu" aria-label={`${label} 菜单`}>
@@ -355,6 +367,17 @@ export default function GameSfxGenerator() {
     setSerialized(serializeSfxParams(nextParams));
     setStatus(`已应用回工作台：「${item.name}」。`);
     setOpenExportMenu(null);
+  };
+  const deleteHistoryItem = (item: SavedSfxHistoryItem): void => {
+    setHistory((current) => current.filter((entry) => entry.id !== item.id));
+    if (editingHistoryId === item.id) {
+      setEditingHistoryId(null);
+      setEditingHistoryName('');
+    }
+    if (openExportMenu === `history-${item.id}`) {
+      setOpenExportMenu(null);
+    }
+    setStatus(`已删除历史记录：「${item.name}」。`);
   };
   const commitHistoryRename = (): void => {
     if (!editingHistoryId) return;
@@ -479,7 +502,7 @@ export default function GameSfxGenerator() {
               <button className="secondary-button secondary-button--teal save-button" type="button" aria-label="保存当前音效" onClick={saveCurrentToHistory}>保存到历史</button>
               <div className="preview-dock__footer">
                 <div className="option-card option-card--monitor"><span>预计导出体积</span><strong>{formatBytes(rendered.stats.estimatedByteSize)}</strong></div>
-                <ExportMenu menuId="current" label="当前音效导出" isOpen={openExportMenu === 'current'} isExporting={exportingMenuId === 'current'} triggerClassName="secondary-button secondary-button--amber export-menu__trigger" onToggle={toggleExportMenu} onExport={(format) => { void runExport(format, currentSnapshot, 'current', '当前音效'); }} />
+                <ExportMenu menuId="current" label="当前音效导出" variant="console" isOpen={openExportMenu === 'current'} isExporting={exportingMenuId === 'current'} triggerClassName="export-menu__trigger export-menu__trigger--console" onToggle={toggleExportMenu} onExport={(format) => { void runExport(format, currentSnapshot, 'current', '当前音效'); }} />
               </div>
             </div>
             <div className={`status-banner ${isPlaying ? 'status-banner--live' : ''}`} role="status">{status}</div>
@@ -505,7 +528,7 @@ export default function GameSfxGenerator() {
                         ) : (
                           <button className="history-card__title" type="button" onClick={() => { setEditingHistoryId(item.id); setEditingHistoryName(item.name); }}>{item.name}</button>
                         )}
-                        <button className="ghost-button history-card__rename" type="button" onClick={() => { setEditingHistoryId(item.id); setEditingHistoryName(item.name); }}>重命名</button>
+                        <button className="ghost-button history-card__rename" type="button" onClick={() => deleteHistoryItem(item)}>删除</button>
                       </div>
                       <div className="history-card__meta">{formatHistoryDetail(item.savedAt)}</div>
                       <div className="history-card__chips">
@@ -517,7 +540,7 @@ export default function GameSfxGenerator() {
                       <div className="history-card__actions">
                         <button className="ghost-button" type="button" onClick={() => applyHistoryToWorkbench(item)}>应用</button>
                         <button className="ghost-button" type="button" onClick={() => { void handlePlayHistory(item); }}>播放</button>
-                        <ExportMenu menuId={menuId} label={`${item.name} 导出`} isOpen={openExportMenu === menuId} isExporting={exportingMenuId === menuId} triggerClassName="ghost-button export-menu__trigger" onToggle={toggleExportMenu} onExport={(format) => { void runExport(format, toSnapshot(item), menuId, `历史记录「${item.name}」`); }} />
+                        <ExportMenu menuId={menuId} label={`${item.name} 导出`} variant="inline" isOpen={openExportMenu === menuId} isExporting={exportingMenuId === menuId} triggerClassName="ghost-button export-menu__trigger export-menu__trigger--inline" onToggle={toggleExportMenu} onExport={(format) => { void runExport(format, toSnapshot(item), menuId, `历史记录「${item.name}」`); }} />
                       </div>
                     </article>
                   );

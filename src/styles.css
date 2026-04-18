@@ -812,6 +812,7 @@ textarea,
 
 .option-card--monitor {
   align-content: start;
+  min-height: 86px;
 }
 
 .advanced-editor-panel {
@@ -826,13 +827,22 @@ textarea,
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .export-menu {
   position: relative;
   display: grid;
   align-content: start;
+}
+
+.preview-dock__footer > .export-menu {
+  align-self: stretch;
+}
+
+.preview-dock__footer > .export-menu > .export-menu__trigger--console {
+  min-height: 86px;
+  height: 86px;
 }
 
 .export-menu__trigger {
@@ -844,23 +854,30 @@ textarea,
 }
 
 .export-menu__trigger--console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   min-width: 168px;
-  min-height: 54px;
-  padding: 0 16px;
-  border-color: rgba(187, 115, 39, 0.3);
+  min-height: 72px;
+  padding: 0 12px 0 18px;
+  border-radius: 20px;
+  border-color: rgba(29, 125, 136, 0.24);
   background:
-    linear-gradient(180deg, rgba(255, 248, 232, 0.98), rgba(243, 224, 186, 0.94));
-  color: #6b4114;
+    linear-gradient(135deg, #176d76 0%, #29989d 100%);
+  color: #fefbf2;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 16px 24px rgba(187, 115, 39, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 14px 24px rgba(29, 125, 136, 0.2);
+  text-align: left;
 }
 
 .export-menu__trigger--console:hover {
-  border-color: rgba(187, 115, 39, 0.44);
+  border-color: rgba(29, 125, 136, 0.34);
+  background:
+    linear-gradient(135deg, #1a7480 0%, #2ea3a8 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 18px 28px rgba(187, 115, 39, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 16px 28px rgba(29, 125, 136, 0.24);
 }
 
 .export-menu__trigger--inline {
@@ -878,6 +895,27 @@ textarea,
   background: rgba(29, 125, 136, 0.12);
 }
 
+.export-menu__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.export-menu__eyebrow {
+  color: rgba(254, 251, 242, 0.72);
+  font-family: "Cascadia Mono", "Consolas", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.export-menu__title {
+  color: #fefbf2;
+  font-size: 1.04rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
 .export-menu__caret {
   display: inline-flex;
   align-items: center;
@@ -885,8 +923,21 @@ textarea,
   min-width: 28px;
   height: 28px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 248, 233, 0.92);
+  color: #8b5b27;
+  box-shadow: inset 0 0 0 1px rgba(152, 101, 42, 0.14);
   font-size: 0.8rem;
+}
+
+.export-menu__caret--console {
+  min-width: 34px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fefbf2;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 6px 12px rgba(20, 74, 83, 0.12);
 }
 
 .export-menu__list {
@@ -899,8 +950,8 @@ textarea,
   padding: 8px;
   border-radius: 16px;
   border: 1px solid var(--line-strong);
-  background: rgba(255, 249, 236, 0.98);
-  box-shadow: 0 18px 30px rgba(35, 49, 58, 0.16);
+  background: rgba(255, 250, 240, 0.98);
+  box-shadow: 0 18px 30px rgba(35, 49, 58, 0.12);
 }
 
 .export-menu__item {
