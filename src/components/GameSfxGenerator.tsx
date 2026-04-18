@@ -439,19 +439,6 @@ export default function GameSfxGenerator() {
             })}
           </div>
 
-          <section className="console-surface advanced-editor-panel" aria-labelledby="json-panel-title">
-            <div className="panel-head">
-              <div><p className="section-kicker">Advanced</p><h3 id="json-panel-title">参数 JSON</h3></div>
-              <span>复制、粘贴或直接编辑参数。</span>
-            </div>
-            <div className="advanced-editor">
-              <textarea id="sfx-json-editor" className="json-editor" aria-label="参数 JSON 编辑器" value={serialized} onChange={handleJsonChange} />
-              <div className="json-actions">
-                <button className="ghost-button" type="button" onClick={() => { void handleCopyJson(); }}>复制 JSON</button>
-                <button className="ghost-button" type="button" onClick={handleApplyJson}>应用 JSON</button>
-              </div>
-            </div>
-          </section>
         </div>
         <aside className="preview-column">
           <section className={`console-surface preview-dock ${isPlaying ? 'is-live' : ''}`} aria-labelledby="preview-title">
@@ -537,6 +524,20 @@ export default function GameSfxGenerator() {
                 })}
               </div>
             )}
+          </section>
+
+          <section className="console-surface advanced-editor-panel" aria-labelledby="json-panel-title">
+            <div className="panel-head">
+              <div><p className="section-kicker">Advanced</p><h3 id="json-panel-title">参数 JSON</h3></div>
+              <span>复制、粘贴或直接编辑参数。</span>
+            </div>
+            <div className="advanced-editor">
+              <textarea id="sfx-json-editor" className="json-editor" aria-label="参数 JSON 编辑器" value={serialized} onChange={handleJsonChange} />
+              <div className="json-actions">
+                <button className="ghost-button" type="button" onClick={() => { void handleCopyJson(); }}>复制 JSON</button>
+                <button className="ghost-button" type="button" onClick={handleApplyJson}>应用 JSON</button>
+              </div>
+            </div>
           </section>
         </aside>
       </div>
