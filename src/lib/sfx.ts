@@ -269,7 +269,7 @@ export function createSfxPreset(
       });
     case 'laserShoot':
       return clampSfxParams({
-        waveform: Math.random() > 0.6 ? 'sawtooth' : 'square',
+        waveform: 'noise',
         sustain: randomRange(0.08, 0.22),
         sustainPunch: randomRange(0.12, 0.34),
         decay: randomRange(0.14, 0.34),
@@ -444,7 +444,7 @@ export function createSfxPreset(
       });
     case 'click':
       return clampSfxParams({
-        waveform: 'square',
+        waveform: 'sine',
         sustain: randomRange(0.01, 0.04),
         sustainPunch: randomRange(0.18, 0.48),
         decay: randomRange(0.01, 0.06),
